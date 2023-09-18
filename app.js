@@ -100,7 +100,18 @@ app.post('/signup', async function(req, res){
     console.log('Sign Up Successfull');
     res.redirect('/');
     
-})
+});
+
+app.get('/delete/:Collection', async function(req, res) {
+    const collection = req.params.Collection;
+
+    mongoose.connection.db.dropCollection(collection);
+
+    await List.deleteOne({username: collection});
+
+    console.log(collection + 'Delete Successfull');
+    res.redirect('/');
+});
 
 app.listen(port, ()=>{
     console.log('listening on port' + port);
