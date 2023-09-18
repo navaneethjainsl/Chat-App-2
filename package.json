@@ -1,0 +1,27 @@
+{
+  "name": "chat-app-2",
+  "version": "1.0.0",
+  "description": "Self built chat app",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/navaneethjainsl/Chat-App-2.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/navaneethjainsl/Chat-App-2/issues"
+  },
+  "homepage": "https://github.com/navaneethjainsl/Chat-App-2#readme",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "lodash": "^4.17.21",
+    "mongodb": "^6.1.0",
+    "mongoose": "^7.5.2"
+  }
+}
