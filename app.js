@@ -4,11 +4,15 @@ const mongoose  = require('mongoose');
 const ejs = require('ejs');
 const lodash = require('lodash');
 const bodyParser = require('body-parser');
+var util = require('util');
 // const { Schema } = mongoose;
 
 const port = process.env.PORT || 3000;
 
 const app = express();
+const ObjectId = mongoose.Types.ObjectId;
+// console.log("ObjectId");
+// console.log(ObjectId);
 
 app.set('view engine', 'ejs');
 
@@ -16,7 +20,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 // const db = mongoose.createConnection('mongodb+srv://navaneethjainsl:chatapp2@cluster0.mzm2lqz.mongodb.net/?retryWrites=true&w=majority', {useNewUrlParser: true});
-mongoose.connect('mongodb+srv://navaneethjainsl:chatapp2@cluster0.mzm2lqz.mongodb.net/?retryWrites=true&w=majority', {useNewUrlParser: true});
+const db = mongoose.connect('mongodb+srv://navaneethjainsl:chatapp2@cluster0.mzm2lqz.mongodb.net/?retryWrites=true&w=majority', {useNewUrlParser: true});
+// console.log("db");
+// console.log(db);
 
 // Use to access all collections in mongodb.Db
 // use it to access any users collection
@@ -26,6 +32,19 @@ mongoose.connect('mongodb+srv://navaneethjainsl:chatapp2@cluster0.mzm2lqz.mongod
 //     mongoose.connection.close();
 // });
 
+// Create a collection for each user
+// Name each collection with the given username
+const userSchema = new mongoose.Schema({
+    receiver_id: mongoose.Schema.Types.ObjectId,
+    chat: [{
+        date: Date,
+        message: {
+            timeMsg: Date,
+            text: String
+        }
+    }]
+});
+
 // List collection stores the list of all users having their account on chat app
 const listSchema = new mongoose.Schema({
     name: String,
@@ -34,24 +53,13 @@ const listSchema = new mongoose.Schema({
         unique: true,
         dropDups: true,
         required: true,
-    }
+    },
+    // collection: type: mongoose.SchemaTypes.ObjectId
+    // collection: userSchema
 });
 
-// Create a collection for each user
-    // Name each collection with the given username
-    const userSchema = new mongoose.Schema({
-        reciever_id: mongoose.Schema.Types.ObjectId,
-        chat: [{
-            date: Date,
-            message: {
-                timeMsg: Date,
-                text: String
-            }
-        }]
-    });
-    
-
 const List = mongoose.model('List', listSchema);
+
 
 app.get('/', (req, res) =>{
     res.sendFile(__dirname + '/login.html');
@@ -59,13 +67,9 @@ app.get('/', (req, res) =>{
 
 // Login only if user account is present
 app.post('/login', async (req, res) =>{
-    // const name = req.body.name;
     const username = req.body.username;
 
-    // console.log("/login hi1");
     const userData = await List.findOne({ username: username}).exec();
-    // console.log("/login hi1");
-    console.log(userData);
     
     // Check if user has an account
     if(userData === null){
@@ -91,15 +95,16 @@ app.post('/signup', async function(req, res){
         console.log('Sign Up Unsuccessfull');
         return res.redirect('/');
     }
+    
+    const User = mongoose.model(username , userSchema, username);
 
     // Add the user to the List of all users
     const list = new List({
         name: name,
-        username: username
+        username: username,
+        // collection: user
     });
     await list.save();    
-    
-    mongoose.model(username , userSchema, username);
     
     console.log('Sign Up Successfull');
     res.redirect('/');
@@ -121,52 +126,86 @@ app.get('/search/:objid', async function(req, res){
     const objid = req.params.objid;
 
     const userData = await List.findOne({ _id: objid}).exec();
-    res.render('index', {name: userData.name, username: userData.username, userid: userData._id});
+    console.log(userData);
+    res.render('index', {data: userData});
 });
 
 app.post('/search/:objid', async function(req, res){
-    const search = req.body.search;
-    const objid = req.body.objid;
-    const recieverData = await List.findOne({ username: search}).exec();
-    const userData = await List.findOne({ _id: objid}).exec();
-    // const userCollectionData = "hi";
-    const collections = [];
+    const receiverUsername = req.body.search;
+    const userId = req.params.objid;
+    const receiverData = await List.findOne({ username: receiverUsername}).exec();
+    const userData = await List.findOne({ _id: userId});
+    console.log("userData");
+    console.log(userData);
+    console.log("receiverData");
+    console.log(receiverData);
+    
+    const userCollectionName = await  mongoose.model(userData.username, userSchema, userData.username);
+    const receiverCollectionName = await  mongoose.model(receiverData.username, userSchema, receiverData.username);
+    // const userCollection = await userCollectionName.find({});
+    // console.log("userCollection");
+    // console.log(userCollection);
+    // console.log(userCollection.length);
 
-    // mongoose.connection.once('open', async () => {
-    //     console.log("hi1");
-    //     const collections = await mongoose.connection.db.listCollections().toArray();
-    //     console.log(collections);
-    //     // collections.forEach((collection) => {
-    //     //     console.log(collection.name);
-    //     // });
-    //     mongoose.connection.close();
-    // });
-    
-    // collections.forEach((collection)=>{
-    //     console.log("hi2");
-    //     if(collection === userData.username){
-    //         const userCollectionData = collection;
-    //         console.log(userCollectionData);
-    //     }
-    // });
-    // console.log(userCollectionData);
-    
-    // userCollectionData = await MyModel.find({});
-    // console.log(userCollectionData);
-    
-    const userCollectionData = await mongoose.connection.db.get({});
-    console.log(userCollectionData);
-
-    // recieverData = await userData.username.findOne({ reciever_id: recieverData._id}).exec();
-    // if(!recieverData){
-    //     const recieverChat = new userCollectionData({
-    //         reciever_id: recieverData._id,
-    //         chat: []
-    //     });
-    //     await recieverChat.save();
+    let receiver;
+    let user;
+    // if(userCollection.length){
+    //     receiver = await userCollectionName.find({receiver_id: receiverData._id});
+    //     console.log("receiver");
+    //     console.log(receiver);
     // }
-    // res.redirect("/messages/" + userData._id + "/" + recieverData._id);
 
+    receiver = await userCollectionName.find({receiver_id: receiverData._id});
+    user = await receiverCollectionName.find({receiver_id: userData._id});
+    console.log("receiver");
+    console.log(receiver);
+    console.log("user");
+    console.log(user);
+    
+    if(!receiver.length){
+        receiver = new userCollectionName({
+            receiver_id: receiverData._id,
+            chat: [],
+            // collection: user
+        });
+        await receiver.save();
+    }
+
+    if(!user.length){
+        user = new receiverCollectionName({
+            receiver_id: userData._id,
+            chat: [],
+            // collection: user
+        });
+        await user.save();
+    }
+    
+    // console.log(receiverData._id)
+    res.redirect("/messages/" + userData._id + "/" + receiverData._id);
+
+});
+
+app.get('/messages/:userId/:receiverId', async function(req, res){
+    console.log("Entered get /messages");
+    
+    const receiverId = req.params.receiverId;
+    const userId = req.params.userId;
+    const receiverData = await List.findOne({ _id: receiverId});
+    const userData = await List.findOne({ _id: userId});
+    console.log("userData");
+    console.log(userData);
+    console.log("receiverData");
+    console.log(receiverData);
+    
+    const userCollectionName = await  mongoose.model(userData.username, userSchema, userData.username);
+    const receiverCollectionName = await  mongoose.model(receiverData.username, userSchema, receiverData.username);
+    
+    let receiver = await userCollectionName.find({receiver_id: receiverData._id});
+    let user = await receiverCollectionName.find({receiver_id: userData._id});
+    console.log("user");
+    console.log(user);
+    console.log("receiver");
+    console.log(receiver);
 });
 
 app.listen(port, ()=>{
