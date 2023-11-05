@@ -37,11 +37,13 @@ const db = mongoose.connect('mongodb+srv://navaneethjainsl:chatapp2@cluster0.mzm
 const userSchema = new mongoose.Schema({
     receiver_id: mongoose.Schema.Types.ObjectId,
     chat: [{
-        date: Date,
-        message: {
-            timeMsg: Date,
+        date: {
+            type: String,
+        },
+        message: [{
+            timeMsg: Number,
             text: String
-        }
+        }]
     }]
 });
 
@@ -54,6 +56,12 @@ const listSchema = new mongoose.Schema({
         dropDups: true,
         required: true,
     },
+    // userId: {
+    //     type: mongoose.Schema.Types.ObjectId,
+    //     unique: true,
+    //     dropDups: true,
+    //     required: true,
+    // },
     // collection: type: mongoose.SchemaTypes.ObjectId
     // collection: userSchema
 });
@@ -102,6 +110,7 @@ app.post('/signup', async function(req, res){
     const list = new List({
         name: name,
         username: username,
+        // userId: User._id,
         // collection: user
     });
     await list.save();    
@@ -206,6 +215,57 @@ app.get('/messages/:userId/:receiverId', async function(req, res){
     console.log(user);
     console.log("receiver");
     console.log(receiver);
+
+    res.render('message', {userData: user[0], receiverData: receiver[0], userId: userId, receiverId: receiverId});
+});
+
+app.post('/messages/:userId/:receiverId/send', async function(req, res){
+    console.log('Inside /messages/:userId/:receiverId/send');
+    
+    const receiverId = req.params.receiverId;
+    const userId = req.params.userId;
+    console.log(userId);
+    const receiverData = await List.findOne({ _id: receiverId});
+    const userData = await List.findOne({ _id: userId});
+    console.log(userData);
+    
+    const userCollectionName = await mongoose.model(userData.username, userSchema, userData.username);
+    // const receiverCollectionName = await  mongoose.model(receiverData.username, userSchema, receiverData.username);
+    
+    // let receiver = await userCollectionName.find({receiver_id: receiverData._id});
+    
+    console.log("receiverData._id");
+    console.log(receiverData._id);
+    let user = await userCollectionName.findOne({receiver_id: receiverData._id});
+
+    console.log("user.chat");
+    console.log(user.chat);
+    console.log(typeof(new Date().getMilliseconds()));
+
+    if(user.chat.length && user.chat[user.chat.length - 1].date === new Date().toJSON().slice(0, 10)){
+        user.chat[user.chat.length - 1].message.push({
+            timeMsg: new Date().getMilliseconds(),
+            text: req.body.message
+        });
+    }
+    else{
+        if(!user.chat){
+            user.chat = [];
+        }
+        user.chat.push({
+            date: new Date().toJSON().slice(0, 10),
+            message: [{
+                timeMsg: new Date().getMilliseconds(),
+                text: req.body.message 
+            }]
+        });
+    }
+    
+    await user.save();
+    // const update = await userCollectionName.findOneAndUpdate({receiver_id: userData._id}, { chat: user.chat });
+    // console.log(update);
+
+    res.redirect(`/messages/${userId}/${receiverId}`);
 });
 
 app.listen(port, ()=>{
