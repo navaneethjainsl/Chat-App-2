@@ -209,12 +209,12 @@ app.get('/messages/:userId/:receiverId', async function(req, res){
     const userCollectionName = await  mongoose.model(userData.username, userSchema, userData.username);
     const receiverCollectionName = await  mongoose.model(receiverData.username, userSchema, receiverData.username);
     
-    let receiver = await userCollectionName.find({receiver_id: receiverData._id});
-    let user = await receiverCollectionName.find({receiver_id: userData._id});
+    let user = await userCollectionName.find({receiver_id: receiverData._id});
+    let receiver = await receiverCollectionName.find({receiver_id: userData._id});
     console.log("user");
-    console.log(user);
+    console.log(JSON.stringify(user));
     console.log("receiver");
-    console.log(receiver);
+    console.log(JSON.stringify(receiver));
 
     res.render('message', {userData: user[0], receiverData: receiver[0], userId: userId, receiverId: receiverId});
 });
@@ -240,11 +240,11 @@ app.post('/messages/:userId/:receiverId/send', async function(req, res){
 
     console.log("user.chat");
     console.log(user.chat);
-    console.log(typeof(new Date().getMilliseconds()));
+    console.log(typeof(new Date().getTime()));
 
     if(user.chat.length && user.chat[user.chat.length - 1].date === new Date().toJSON().slice(0, 10)){
         user.chat[user.chat.length - 1].message.push({
-            timeMsg: new Date().getMilliseconds(),
+            timeMsg: new Date().getTime(),
             text: req.body.message
         });
     }
@@ -255,7 +255,7 @@ app.post('/messages/:userId/:receiverId/send', async function(req, res){
         user.chat.push({
             date: new Date().toJSON().slice(0, 10),
             message: [{
-                timeMsg: new Date().getMilliseconds(),
+                timeMsg: new Date().getTime(),
                 text: req.body.message 
             }]
         });
