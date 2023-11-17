@@ -32,16 +32,15 @@ app.use(passport.session());
 
 // const db = mongoose.createConnection('mongodb+srv://navaneethjainsl:chatapp2@cluster0.mzm2lqz.mongodb.net/?retryWrites=true&w=majority', {useNewUrlParser: true});
 const db = mongoose.connect('mongodb+srv://navaneethjainsl:chatapp2@cluster0.mzm2lqz.mongodb.net/?retryWrites=true&w=majority', {useNewUrlParser: true});
-// console.log("db");
-// console.log(db);
 
-// Use to access all collections in mongodb.Db
-// use it to access any users collection
+// // Use to access all collections in mongodb.Db
+// // use it to access any users collection
 // mongoose.connection.once('open', async () => {
 //     const collections = await mongoose.connection.db.listCollections().toArray();
 //     console.log(collections);
 //     mongoose.connection.close();
 // });
+
 
 // Create a collection for each user
 // Name each collection with the given username
@@ -91,40 +90,6 @@ app.get('/', (req, res) =>{
     res.sendFile(__dirname + '/login.html');
 });
 
-// Login only if user account is present
-app.post('/login', async (req, res) =>{
-    const list = new List({
-        username: req.body.username,
-        password: req.body.password
-    });
-
-    req.login(list, async function(err){
-        if(err){
-            console.log(err);
-            res.redirect('/');
-        }
-        else{
-            const username = req.body.username;
-            const userData = await List.findOne({ username: username}).exec();
-
-            passport.authenticate("local")(req, res, function(){
-                console.log('Login Successfull');   //remove
-                res.redirect(`/search/${userData._id}`);
-            });
-        }
-    })
-    
-    
-    // // Check if user has an account
-    // if(userData === null){
-    //     console.log('User Name not found');
-    //     res.redirect('/');
-    // }
-    // else{
-    //     console.log('Login Successfull');   //remove
-    //     res.redirect('/search/' + userData._id);
-    // }
-});
 
 // Signup to create a new user account
 app.post('/signup', async function(req, res){
@@ -175,6 +140,48 @@ app.post('/signup', async function(req, res){
     
 });
 
+// Login only if user account is present
+app.post('/login', async (req, res) =>{
+    const list = new List({
+        username: req.body.username,
+        password: req.body.password
+    });
+
+    req.login(list, async function(err){
+        if(err){
+            console.log(err);
+            res.redirect('/');
+        }
+        else{
+            const username = req.body.username;
+            const userData = await List.findOne({ username: username}).exec();
+
+            passport.authenticate("local")(req, res, function(){
+                console.log('Login Successfull');   //remove
+                res.redirect(`/search/${userData._id}`);
+            });
+        }
+    })
+    
+    
+    // // Check if user has an account
+    // if(userData === null){
+    //     console.log('User Name not found');
+    //     res.redirect('/');
+    // }
+    // else{
+    //     console.log('Login Successfull');   //remove
+    //     res.redirect('/search/' + userData._id);
+    // }
+});
+
+//Logout
+app.post('/logout', function(req, res){
+    req.logout();
+    res.redirect('/');
+})
+
+// Delete a User
 app.get('/delete/:Collection', async function(req, res) {
     const collection = req.params.Collection;
     
@@ -186,6 +193,7 @@ app.get('/delete/:Collection', async function(req, res) {
     res.redirect('/');
 });
 
+// Search Other Users
 app.get('/search/:objid', async function(req, res){
     if(req.isAuthenticated()){
         const objid = req.params.objid;
@@ -259,10 +267,9 @@ app.post('/search/:objid', async function(req, res){
         res.redirect('/');
     }
     
-    
-
 });
 
+// Messages Page
 app.get('/messages/:userId/:receiverId', async function(req, res){
     if(req.isAuthenticated()){
         console.log("Entered get /messages");
@@ -295,6 +302,7 @@ app.get('/messages/:userId/:receiverId', async function(req, res){
     
     
 });
+
 
 app.post('/messages/:userId/:receiverId/send', async function(req, res){
     if(req.isAuthenticated()){
@@ -352,6 +360,7 @@ app.post('/messages/:userId/:receiverId/send', async function(req, res){
     
     
 });
+
 
 app.listen(port, ()=>{
     console.log('listening on port' + port);
