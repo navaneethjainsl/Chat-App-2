@@ -93,48 +93,85 @@ app.get('/', (req, res) =>{
 
 // Login only if user account is present
 app.post('/login', async (req, res) =>{
-    const username = req.body.username;
+    const list = new List({
+        username: req.body.username,
+        password: req.body.password
+    });
 
-    const userData = await List.findOne({ username: username}).exec();
+    req.login(list, async function(err){
+        if(err){
+            console.log(err);
+            res.redirect('/');
+        }
+        else{
+            const username = req.body.username;
+            const userData = await List.findOne({ username: username}).exec();
+
+            passport.authenticate("local")(req, res, function(){
+                console.log('Login Successfull');   //remove
+                res.redirect(`/search/${userData._id}`);
+            });
+        }
+    })
     
-    // Check if user has an account
-    if(userData === null){
-        console.log('User Name not found');
-        res.redirect('/');
-    }
-    else{
-        console.log('Login Successfull');   //remove
-        res.redirect('/search/' + userData._id);
-    }
+    
+    // // Check if user has an account
+    // if(userData === null){
+    //     console.log('User Name not found');
+    //     res.redirect('/');
+    // }
+    // else{
+    //     console.log('Login Successfull');   //remove
+    //     res.redirect('/search/' + userData._id);
+    // }
 });
 
 // Signup to create a new user account
 app.post('/signup', async function(req, res){
     const name = req.body.name;
     const username = req.body.username;
+    const password = req.body.password;
     
-    // Check if an account with the given username already exists
-    const userData = await List.findOne({ username: username}).exec();
-    
-    if(userData != null){
-        console.log(userData);
-        console.log('Sign Up Unsuccessfull');
-        return res.redirect('/');
-    }
-    
-    const User = mongoose.model(username , userSchema, username);
-
-    // Add the user to the List of all users
-    const list = new List({
-        name: name,
-        username: username,
-        // userId: User._id,
-        // collection: user
+    List.register({username: username}, password, async function(err, list) {
+        if (err) { 
+            console.log("Error in /signup");
+            console.log(err);
+            res.redirect('/');
+        }
+        else{
+            console.log('Sign Up Successfull');
+            
+            // console.log(list);
+            list.name = name;
+            await list.save();
+            
+            const User = mongoose.model(username , userSchema, username);
+            
+            passport.authenticate("local")(req, res, function(){
+                // res.redirect(`/search/${userData._id}`);
+                res.redirect(`/`);
+            })
+        }
+      
     });
-    await list.save();    
     
-    console.log('Sign Up Successfull');
-    res.redirect('/');
+    // // Check if an account with the given username already exists
+    // const userData = await List.findOne({ username: username}).exec();
+    
+    // if(userData != null){
+    //     console.log(userData);
+    //     console.log('Sign Up Unsuccessfull');
+    //     return res.redirect('/');
+    // }
+
+    // // Add the user to the List of all users
+    // const list = new List({
+    //     name: name,
+    //     username: username,
+    //     // userId: User._id,
+    //     // collection: user
+    // });
+    // await list.save();    
     
 });
 
@@ -150,140 +187,170 @@ app.get('/delete/:Collection', async function(req, res) {
 });
 
 app.get('/search/:objid', async function(req, res){
-    const objid = req.params.objid;
-
-    const userData = await List.findOne({ _id: objid}).exec();
-    console.log(userData);
-    res.render('index', {data: userData});
+    if(req.isAuthenticated()){
+        const objid = req.params.objid;
+    
+        const userData = await List.findOne({ _id: objid}).exec();
+        console.log(userData);
+        res.render('index', {data: userData});
+    }
+    else{
+        res.redirect('/');
+    }
+    
 });
 
 app.post('/search/:objid', async function(req, res){
-    const receiverUsername = req.body.search;
-    const userId = req.params.objid;
-    const receiverData = await List.findOne({ username: receiverUsername}).exec();
-    const userData = await List.findOne({ _id: userId});
-    console.log("userData");
-    console.log(userData);
-    console.log("receiverData");
-    console.log(receiverData);
+    if(req.isAuthenticated()){
+        const receiverUsername = req.body.search;
+        const userId = req.params.objid;
+        const receiverData = await List.findOne({ username: receiverUsername}).exec();
+        const userData = await List.findOne({ _id: userId});
+        console.log("userData");
+        console.log(userData);
+        console.log("receiverData");
+        console.log(receiverData);
+        
+        const userCollectionName = await  mongoose.model(userData.username, userSchema, userData.username);
+        const receiverCollectionName = await  mongoose.model(receiverData.username, userSchema, receiverData.username);
+        // const userCollection = await userCollectionName.find({});
+        // console.log("userCollection");
+        // console.log(userCollection);
+        // console.log(userCollection.length);
     
-    const userCollectionName = await  mongoose.model(userData.username, userSchema, userData.username);
-    const receiverCollectionName = await  mongoose.model(receiverData.username, userSchema, receiverData.username);
-    // const userCollection = await userCollectionName.find({});
-    // console.log("userCollection");
-    // console.log(userCollection);
-    // console.log(userCollection.length);
-
-    let receiver;
-    let user;
-    // if(userCollection.length){
-    //     receiver = await userCollectionName.find({receiver_id: receiverData._id});
-    //     console.log("receiver");
-    //     console.log(receiver);
-    // }
-
-    receiver = await userCollectionName.find({receiver_id: receiverData._id});
-    user = await receiverCollectionName.find({receiver_id: userData._id});
-    console.log("receiver");
-    console.log(receiver);
-    console.log("user");
-    console.log(user);
+        let receiver;
+        let user;
+        // if(userCollection.length){
+        //     receiver = await userCollectionName.find({receiver_id: receiverData._id});
+        //     console.log("receiver");
+        //     console.log(receiver);
+        // }
     
-    if(!receiver.length){
-        receiver = new userCollectionName({
-            receiver_id: receiverData._id,
-            chat: [],
-            // collection: user
-        });
-        await receiver.save();
+        receiver = await userCollectionName.find({receiver_id: receiverData._id});
+        user = await receiverCollectionName.find({receiver_id: userData._id});
+        console.log("receiver");
+        console.log(receiver);
+        console.log("user");
+        console.log(user);
+        
+        if(!receiver.length){
+            receiver = new userCollectionName({
+                receiver_id: receiverData._id,
+                chat: [],
+                // collection: user
+            });
+            await receiver.save();
+        }
+    
+        if(!user.length){
+            user = new receiverCollectionName({
+                receiver_id: userData._id,
+                chat: [],
+                // collection: user
+            });
+            await user.save();
+        }
+        
+        // console.log(receiverData._id)
+        res.redirect("/messages/" + userData._id + "/" + receiverData._id);
+        
     }
-
-    if(!user.length){
-        user = new receiverCollectionName({
-            receiver_id: userData._id,
-            chat: [],
-            // collection: user
-        });
-        await user.save();
+    else{
+        res.redirect('/');
     }
     
-    // console.log(receiverData._id)
-    res.redirect("/messages/" + userData._id + "/" + receiverData._id);
+    
 
 });
 
 app.get('/messages/:userId/:receiverId', async function(req, res){
-    console.log("Entered get /messages");
+    if(req.isAuthenticated()){
+        console.log("Entered get /messages");
+        
+        const receiverId = req.params.receiverId;
+        const userId = req.params.userId;
+        const receiverData = await List.findOne({ _id: receiverId});
+        const userData = await List.findOne({ _id: userId});
+        console.log("userData");
+        console.log(userData);
+        console.log("receiverData");
+        console.log(receiverData);
+        
+        const userCollectionName = await  mongoose.model(userData.username, userSchema, userData.username);
+        const receiverCollectionName = await  mongoose.model(receiverData.username, userSchema, receiverData.username);
+        
+        let user = await userCollectionName.find({receiver_id: receiverData._id});
+        let receiver = await receiverCollectionName.find({receiver_id: userData._id});
+        console.log("user");
+        console.log(JSON.stringify(user));
+        console.log("receiver");
+        console.log(JSON.stringify(receiver));
     
-    const receiverId = req.params.receiverId;
-    const userId = req.params.userId;
-    const receiverData = await List.findOne({ _id: receiverId});
-    const userData = await List.findOne({ _id: userId});
-    console.log("userData");
-    console.log(userData);
-    console.log("receiverData");
-    console.log(receiverData);
+        res.render('message', {userData: user[0], receiverData: receiver[0], userId: userId, receiverId: receiverId});
+        
+    }
+    else{
+        res.redirect('/');
+    }
     
-    const userCollectionName = await  mongoose.model(userData.username, userSchema, userData.username);
-    const receiverCollectionName = await  mongoose.model(receiverData.username, userSchema, receiverData.username);
     
-    let user = await userCollectionName.find({receiver_id: receiverData._id});
-    let receiver = await receiverCollectionName.find({receiver_id: userData._id});
-    console.log("user");
-    console.log(JSON.stringify(user));
-    console.log("receiver");
-    console.log(JSON.stringify(receiver));
-
-    res.render('message', {userData: user[0], receiverData: receiver[0], userId: userId, receiverId: receiverId});
 });
 
 app.post('/messages/:userId/:receiverId/send', async function(req, res){
-    console.log('Inside /messages/:userId/:receiverId/send');
+    if(req.isAuthenticated()){
+        console.log('Inside /messages/:userId/:receiverId/send');
+        
+        const receiverId = req.params.receiverId;
+        const userId = req.params.userId;
+        console.log(userId);
+        const receiverData = await List.findOne({ _id: receiverId});
+        const userData = await List.findOne({ _id: userId});
+        console.log(userData);
+        
+        const userCollectionName = await mongoose.model(userData.username, userSchema, userData.username);
+        // const receiverCollectionName = await  mongoose.model(receiverData.username, userSchema, receiverData.username);
+        
+        // let receiver = await userCollectionName.find({receiver_id: receiverData._id});
+        
+        console.log("receiverData._id");
+        console.log(receiverData._id);
+        let user = await userCollectionName.findOne({receiver_id: receiverData._id});
     
-    const receiverId = req.params.receiverId;
-    const userId = req.params.userId;
-    console.log(userId);
-    const receiverData = await List.findOne({ _id: receiverId});
-    const userData = await List.findOne({ _id: userId});
-    console.log(userData);
+        console.log("user.chat");
+        console.log(user.chat);
+        console.log(typeof(new Date().getTime()));
     
-    const userCollectionName = await mongoose.model(userData.username, userSchema, userData.username);
-    // const receiverCollectionName = await  mongoose.model(receiverData.username, userSchema, receiverData.username);
+        if(user.chat.length && user.chat[user.chat.length - 1].date === new Date().toJSON().slice(0, 10)){
+            user.chat[user.chat.length - 1].message.push({
+                timeMsg: new Date().getTime(),
+                text: req.body.message
+            });
+        }
+        else{
+            if(!user.chat){
+                user.chat = [];
+            }
+            user.chat.push({
+                date: new Date().toJSON().slice(0, 10),
+                message: [{
+                    timeMsg: new Date().getTime(),
+                    text: req.body.message 
+                }]
+            });
+        }
+        
+        await user.save();
+        // const update = await userCollectionName.findOneAndUpdate({receiver_id: userData._id}, { chat: user.chat });
+        // console.log(update);
     
-    // let receiver = await userCollectionName.find({receiver_id: receiverData._id});
-    
-    console.log("receiverData._id");
-    console.log(receiverData._id);
-    let user = await userCollectionName.findOne({receiver_id: receiverData._id});
-
-    console.log("user.chat");
-    console.log(user.chat);
-    console.log(typeof(new Date().getTime()));
-
-    if(user.chat.length && user.chat[user.chat.length - 1].date === new Date().toJSON().slice(0, 10)){
-        user.chat[user.chat.length - 1].message.push({
-            timeMsg: new Date().getTime(),
-            text: req.body.message
-        });
+        res.redirect(`/messages/${userId}/${receiverId}`);
+        
     }
     else{
-        if(!user.chat){
-            user.chat = [];
-        }
-        user.chat.push({
-            date: new Date().toJSON().slice(0, 10),
-            message: [{
-                timeMsg: new Date().getTime(),
-                text: req.body.message 
-            }]
-        });
+        res.redirect('/');
     }
     
-    await user.save();
-    // const update = await userCollectionName.findOneAndUpdate({receiver_id: userData._id}, { chat: user.chat });
-    // console.log(update);
-
-    res.redirect(`/messages/${userId}/${receiverId}`);
+    
 });
 
 app.listen(port, ()=>{
