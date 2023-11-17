@@ -1,0 +1,7 @@
+.right{
+    text-align: right;
+}
+
+.right > p{
+    display: inline-block;
+}

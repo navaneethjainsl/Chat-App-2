@@ -5,12 +5,14 @@ const ejs = require('ejs');
 const lodash = require('lodash');
 const bodyParser = require('body-parser');
 var util = require('util');
-// const { Schema } = mongoose;
+const session = require('express-session');
+const passport = require('passport');
+const passportLocalMongoose = require('passport-local-mongoose');
 
 const port = process.env.PORT || 3000;
 
 const app = express();
-const ObjectId = mongoose.Types.ObjectId;
+// const ObjectId = mongoose.Types.ObjectId;
 // console.log("ObjectId");
 // console.log(ObjectId);
 
@@ -18,6 +20,15 @@ app.set('view engine', 'ejs');
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
+
+app.use(session({
+    secret: "navaneethjainsl",
+    resave: false,
+    saveUninitialized: false,
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
 
 // const db = mongoose.createConnection('mongodb+srv://navaneethjainsl:chatapp2@cluster0.mzm2lqz.mongodb.net/?retryWrites=true&w=majority', {useNewUrlParser: true});
 const db = mongoose.connect('mongodb+srv://navaneethjainsl:chatapp2@cluster0.mzm2lqz.mongodb.net/?retryWrites=true&w=majority', {useNewUrlParser: true});
@@ -56,6 +67,7 @@ const listSchema = new mongoose.Schema({
         dropDups: true,
         required: true,
     },
+    password: String,
     // userId: {
     //     type: mongoose.Schema.Types.ObjectId,
     //     unique: true,
@@ -66,7 +78,13 @@ const listSchema = new mongoose.Schema({
     // collection: userSchema
 });
 
+listSchema.plugin(passportLocalMongoose);
+
 const List = mongoose.model('List', listSchema);
+
+passport.use(List.createStrategy());
+passport.serializeUser(List.serializeUser());
+passport.deserializeUser(List.deserializeUser());
 
 
 app.get('/', (req, res) =>{
