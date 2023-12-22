@@ -183,14 +183,20 @@ app.post('/logout', function(req, res){
 
 // Delete a User
 app.get('/delete/:Collection', async function(req, res) {
-    const collection = req.params.Collection;
-    
-    mongoose.connection.db.dropCollection(collection);
-    
-    await List.deleteOne({username: collection});
+    if(req.isAuthenticated()){
 
-    console.log(collection + 'Delete Successfull');
+        const collection = req.params.Collection;
+        
+        await mongoose.connection.db.dropCollection(collection);
+        
+        await List.deleteOne({username: collection});
+    
+        console.log(collection + 'Delete Successfull');
+        // res.redirect('/');
+    }
+
     res.redirect('/');
+    
 });
 
 // Search Other Users

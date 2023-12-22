@@ -4,6 +4,7 @@ let messages = document.querySelector('#messages');
 // console.log(messages.innerHTML)
 let userData, receiverData;
 
+
 if(userDataDiv.value){
     userData = JSON.parse(userDataDiv.value);
 }
@@ -31,26 +32,59 @@ console.log(receiverData);
 
 let i = 0, u = 0, r = 0;
 while(userData.chat.length != 0 || receiverData.chat.length != 0){
+    let userMessage = userData.chat[0], receiverMessage = receiverData.chat[0];
     // console.log("userData.chat");
     // console.log(userData.chat);
     // console.log("receiverData.chat");
     // console.log(receiverData.chat);
-    while((userData.chat[0].message && userData.chat[0].message.length != 0) || (receiverData.chat[0].message && receiverData.chat[0].message.length != 0)){
+    console.log("i");
+    console.log(i);
+    while((userMessage && userMessage.message && userMessage.message.length != 0) || (receiverMessage && receiverMessage.message && receiverMessage.message.length != 0)){
         console.log("log");
-        if(userData.chat[0].message[0] && receiverData.chat[0].message[0]){
-            if(userData.chat[0].message[0].timeMsg <= receiverData.chat[0].message[0].timeMsg){
+        if((!userMessage || !receiverMessage) && !(!userMessage && !receiverMessage)){
+            if(!userMessage){
+                const messageDiv = 
+                `<div class="message-div left">
+                    <p>${receiverMessage.message[0].text}</p>
+                </div>`;
+                    
+                receiverMessage.message.shift();
+                // console.log("receiverMessage.message.length")
+                // console.log(receiverMessage.message.length)
+                    
+                messages.innerHTML += messageDiv;
+                    
+                u++;
+            }
+            else{
+                const messageDiv = 
+                `<div class="message-div right">
+                    <p>${userMessage.message[0].text}</p>
+                </div>`;
+                    
+                userMessage.message.shift();
+                // console.log("userMessage.message.length")
+                // console.log(userMessage.message.length)
+                    
+                messages.innerHTML += messageDiv;
+                    
+                u++;
+            }
+        }
+        else if(userMessage.message[0] && receiverMessage.message[0]){
+            if(userMessage.message[0].timeMsg <= receiverMessage.message[0].timeMsg){
                 console.log("1")
-                console.log(userData.chat[0].message[0].timeMsg)
-                console.log(receiverData.chat[0].message[0].timeMsg)
+                console.log(userMessage.message[0].timeMsg)
+                console.log(receiverMessage.message[0].timeMsg)
     
                 const messageDiv = 
                 `<div class="message-div right">
-                    <p>${userData.chat[0].message[0].text}</p>
+                    <p>${userMessage.message[0].text}</p>
                 </div>`;
                     
-                userData.chat[0].message.shift();
-                // console.log("userData.chat[0].message.length")
-                // console.log(userData.chat[0].message.length)
+                userMessage.message.shift();
+                // console.log("userMessage.message.length")
+                // console.log(userMessage.message.length)
                     
                 messages.innerHTML += messageDiv;
                     
@@ -59,17 +93,17 @@ while(userData.chat.length != 0 || receiverData.chat.length != 0){
             }
             else{
                 console.log("1.2")
-                console.log(userData.chat[0].message[0].timeMsg)
-                console.log(receiverData.chat[0].message[0].timeMsg)
+                console.log(userMessage.message[0].timeMsg)
+                console.log(receiverMessage.message[0].timeMsg)
         
                 const messageDiv = 
                 `<div class="message-div left">
-                    <p>${receiverData.chat[0].message[0].text}</p>
+                    <p>${receiverMessage.message[0].text}</p>
                 </div>`;
                     
-                receiverData.chat[0].message.shift();
-                // console.log("userData.chat[0].message.length")
-                // console.log(userData.chat[0].message.length)
+                receiverMessage.message.shift();
+                // console.log("receiverMessage.message.length")
+                // console.log(receiverMessage.message.length)
                     
                 messages.innerHTML += messageDiv;
                     
@@ -77,53 +111,61 @@ while(userData.chat.length != 0 || receiverData.chat.length != 0){
 
             }
         }
-        else if(!receiverData.chat[0].message[0] && !userData.chat[0].message[0]){
+        else if(!receiverMessage.message[0] && !userMessage.message[0]){
             console.log("2")
-            // console.log(userData.chat[0].message[0].timeMsg)
-            // console.log(receiverData.chat[0].message[0].timeMsg)
+            // console.log(userMessage.message[0].timeMsg)
+            // console.log(receiverMessage.message[0].timeMsg)
             break
         }
-        else if(!userData.chat[0].message[0]){
+        else if(!userMessage.message[0]){
             console.log("3")
-            // console.log(userData.chat[0].message[0].timeMsg)
-            console.log(receiverData.chat[0].message[0].timeMsg)
+            // console.log(userMessage.message[0].timeMsg)
+            console.log(receiverMessage.message[0].timeMsg)
             
             const messageDiv = 
             `<div class="message-div left">
-            <p>${receiverData.chat[0].message[0].text}</p>
+            <p>${receiverMessage.message[0].text}</p>
             </div>`;
             
-            receiverData.chat[0].message.shift();
-            // console.log("receiverData.chat[0].message.length")
-            // console.log(receiverData.chat[0].message.length)
+            receiverMessage.message.shift();
+            // console.log("receiverMessage.message.length")
+            // console.log(receiverMessage.message.length)
             
             messages.innerHTML += messageDiv;
             
             r++
         }
-        else if(!receiverData.chat[0].message[0]){
+        else if(!receiverMessage.message[0]){
             console.log("4")
-            console.log(userData.chat[0].message[0].timeMsg + userData.chat[0].message[0].timeMsg)
-            // console.log(receiverData.chat[0].message[0].timeMsg)
+            console.log(userMessage.message[0].timeMsg)
+            // console.log(receiverMessage.message[0].timeMsg)
 
             const messageDiv = 
             `<div class="message-div right">
-            <p>${userData.chat[0].message[0].text}</p>
+            <p>${userMessage.message[0].text}</p>
             </div>`;
             
-            userData.chat[0].message.shift();
-            // console.log("userData.chat[0].message.length")
-            // console.log(userData.chat[0].message.length)
+            userMessage.message.shift();
+            // console.log("userMessage.message.length")
+            // console.log(userMessage.message.length)
             
             messages.innerHTML += messageDiv;
     
             u++;
         }
 
+        if(!userMessage && !receiverMessage){
+            break;
+        }
+
     }
     
     userData.chat.shift();
     receiverData.chat.shift();
+
+    if(!userData.chat && !receiverData.chat){
+        break;
+    }
 
     i++;
 }
