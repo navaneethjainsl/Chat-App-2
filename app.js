@@ -225,48 +225,56 @@ app.post('/search/:objid', async function(req, res){
         console.log("receiverData");
         console.log(receiverData);
         
-        const userCollectionName = await  mongoose.model(userData.username, userSchema, userData.username);
-        const receiverCollectionName = await  mongoose.model(receiverData.username, userSchema, receiverData.username);
-        // const userCollection = await userCollectionName.find({});
-        // console.log("userCollection");
-        // console.log(userCollection);
-        // console.log(userCollection.length);
-    
-        let receiver;
-        let user;
-        // if(userCollection.length){
-        //     receiver = await userCollectionName.find({receiver_id: receiverData._id});
-        //     console.log("receiver");
-        //     console.log(receiver);
-        // }
-    
-        receiver = await userCollectionName.find({receiver_id: receiverData._id});
-        user = await receiverCollectionName.find({receiver_id: userData._id});
-        console.log("receiver");
-        console.log(receiver);
-        console.log("user");
-        console.log(user);
-        
-        if(!receiver.length){
-            receiver = new userCollectionName({
-                receiver_id: receiverData._id,
-                chat: [],
-                // collection: user
-            });
-            await receiver.save();
+        if(receiverData === null){
+            console.log("Receiver does not exist");
+            res.redirect(`/search/${userId}`);
         }
-    
-        if(!user.length){
-            user = new receiverCollectionName({
-                receiver_id: userData._id,
-                chat: [],
-                // collection: user
-            });
-            await user.save();
+        else{
+            const userCollectionName = await  mongoose.model(userData.username, userSchema, userData.username);
+            const receiverCollectionName = await  mongoose.model(receiverData.username, userSchema, receiverData.username);
+            // const userCollection = await userCollectionName.find({});
+            // console.log("userCollection");
+            // console.log(userCollection);
+            // console.log(userCollection.length);
+        
+            let receiver;
+            let user;
+            // if(userCollection.length){
+            //     receiver = await userCollectionName.find({receiver_id: receiverData._id});
+            //     console.log("receiver");
+            //     console.log(receiver);
+            // }
+        
+            receiver = await userCollectionName.find({receiver_id: receiverData._id});
+            user = await receiverCollectionName.find({receiver_id: userData._id});
+            console.log("receiver");
+            console.log(receiver);
+            console.log("user");
+            console.log(user);
+            
+            if(!receiver.length){
+                receiver = new userCollectionName({
+                    receiver_id: receiverData._id,
+                    chat: [],
+                    // collection: user
+                });
+                await receiver.save();
+            }
+        
+            if(!user.length){
+                user = new receiverCollectionName({
+                    receiver_id: userData._id,
+                    chat: [],
+                    // collection: user
+                });
+                await user.save();
+            }
+            
+            // console.log(receiverData._id)
+            res.redirect("/messages/" + userData._id + "/" + receiverData._id);
+
         }
         
-        // console.log(receiverData._id)
-        res.redirect("/messages/" + userData._id + "/" + receiverData._id);
         
     }
     else{
