@@ -1,0 +1,41 @@
+{
+  "name": "chat-app-2",
+  "version": "1.0.0",
+  "description": "Self built chat app",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/navaneethjainsl/Chat-App-2.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/navaneethjainsl/Chat-App-2/issues"
+  },
+  "homepage": "https://github.com/navaneethjainsl/Chat-App-2#readme",
+  "dependencies": {
+    "axios": "^1.8.1",
+    "bcrypt": "^5.1.1",
+    "body-parser": "^1.20.2",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "express-fileupload": "^1.5.1",
+    "express-session": "^1.17.3",
+    "express-validator": "^7.2.1",
+    "firebase": "^10.5.0",
+    "jsonwebtoken": "^9.0.2",
+    "lodash": "^4.17.21",
+    "mongodb": "^6.1.0",
+    "mongoose": "^7.5.2",
+    "passport": "^0.6.0",
+    "passport-local": "^1.0.0",
+    "passport-local-mongoose": "^8.0.0"
+  },
+  "type": "module"
+}
