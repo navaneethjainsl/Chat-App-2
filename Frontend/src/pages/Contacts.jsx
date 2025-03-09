@@ -2,14 +2,9 @@
 import { motion } from 'framer-motion';
 import { useLocation } from "react-router-dom";
 import Navigation from '@/components/Navigation';
-import ChatInterface from '@/components/ChatInterface';
+import ContactInterface from '@/components/ContactInterface';
 
-const Chat = () => {
-  const location = useLocation();
-  const chatParticipants = location.state;
-  console.log("chatParticipants 1")
-  console.log(chatParticipants)
-  
+const Contacts = () => {  
   return (
     <motion.div
       className="min-h-screen bg-background"
@@ -21,11 +16,11 @@ const Chat = () => {
       <Navigation />
       <div className="container mx-auto p-6 pt-24 h-screen">
         <div className="h-[calc(100vh-6rem)]">
-          <ChatInterface chatParticipants={chatParticipants} />
+          <ContactInterface/>
         </div>
       </div>
     </motion.div>
   );
 };
 
-export default Chat;
+export default Contacts;

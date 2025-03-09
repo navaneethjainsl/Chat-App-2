@@ -10,6 +10,17 @@ const listSchema = new mongoose.Schema({
         required: true,
     },
     password: String,
+    dob: {
+        type: Date,
+    },
+    email: {
+        type: String,
+        unique: true,
+    },
+    phnum: {
+        type: String,
+        unique: true,
+    }
     // userId: {
     //     type: mongoose.Schema.Types.ObjectId,
     //     unique: true,

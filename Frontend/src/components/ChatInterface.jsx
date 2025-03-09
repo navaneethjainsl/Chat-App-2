@@ -17,45 +17,47 @@ const BACKEND_URL = 'http://localhost:5000';
 axios.defaults.withCredentials = true;
 
 // Function to merge chats from user and receiver
-function mergeChats(userchat = [], receiverchat = []) {
-  let chatMap = new Map();
+// function mergeChats(userchat = [], receiverchat = []) {
+//   let chatMap = new Map();
 
-  // Function to process chat arrays
-  function processChats(chats, isOwn) {
-    chats.forEach(({ date, message }) => {
-      if (!chatMap.has(date)) {
-        chatMap.set(date, []);
-      }
-      // Add isOwn property to messages and push
-      chatMap.get(date).push(...message.map(msg => ({ ...msg, isOwn })));
-    });
-  }
+//   // Function to process chat arrays
+//   function processChats(chats, isOwn) {
+//     chats.forEach(({ date, message }) => {
+//       if (!chatMap.has(date)) {
+//         chatMap.set(date, []);
+//       }
+//       // Add isOwn property to messages and push
+//       chatMap.get(date).push(...message.map(msg => ({ ...msg, isOwn })));
+//     });
+//   }
 
-  // Process user and receiver chat data
-  processChats(userchat, true);
-  processChats(receiverchat, false);
+//   // Process user and receiver chat data
+//   processChats(userchat, true);
+//   processChats(receiverchat, false);
 
-  // Convert map to sorted array of objects
-  let mergedChat = Array.from(chatMap.entries()).map(([date, messages]) => ({
-    date,
-    message: messages.sort((a, b) => a.timeMsg - b.timeMsg)
-  }));
+//   // Convert map to sorted array of objects
+//   let mergedChat = Array.from(chatMap.entries()).map(([date, messages]) => ({
+//     date,
+//     message: messages.sort((a, b) => a.timeMsg - b.timeMsg)
+//   }));
 
-  // Flatten all messages into a single sorted array
-  let allMessages = mergedChat.flatMap(({ message }) => message)
-    .sort((a, b) => a.timeMsg - b.timeMsg)
-    .map(msg => ({
-      id: msg._id || uuidv4(),
-      content: msg.text,
-      timestamp: new Date(msg.timeMsg) || new Date(),
-      isOwn: msg.isOwn,
-      status: 'read'
-    }));
+//   // Flatten all messages into a single sorted array
+//   let allMessages = mergedChat.flatMap(({ message }) => message)
+//     .sort((a, b) => a.timeMsg - b.timeMsg)
+//     .map(msg => ({
+//       id: msg._id || uuidv4(),
+//       content: msg.text,
+//       timestamp: new Date(msg.timeMsg) || new Date(),
+//       isOwn: msg.isOwn,
+//       status: 'read'
+//     }));
 
-  return allMessages;
-}
+//   return allMessages;
+// }
 
-const ChatInterface = () => {
+const ChatInterface = ({ chatParticipants }) => {
+  console.log("chatParticipants")
+  console.log(chatParticipants)
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -63,30 +65,30 @@ const ChatInterface = () => {
   const [isLoading, setIsLoading] = useState(true);
   const messagesEndRef = useRef(null);
 
-  // Mock data - in a real app, this would come from a route or context
-  const chatParticipants = {
-    user: {
-      _id: "67c70fd4079df57639ea617a",
-      name: "Navaneeth",
-      username: "navaneethjainsl5"
-    },
-    receiver: {
-      _id: "67c9ae5457543933f4bcfc5e",
-      name: "Navaneeth",
-      username: "navaneethjainsl6"
-    }
-  };
+  // // Mock data - in a real app, this would come from a route or context
+  // const chatParticipants = {
+  //   user: {
+  //     _id: "67c70fd4079df57639ea617a",
+  //     name: "Navaneeth",
+  //     username: "navaneethjainsl5"
+  //   },
+  //   receiver: {
+  //     _id: "67c9ae5457543933f4bcfc5e",
+  //     name: "Navaneeth",
+  //     username: "navaneethjainsl6"
+  //   }
+  // };
 
   // Check authentication on mount
   useEffect(() => {
     const authtoken = Cookies.get("authtoken");
 
-    if (!authtoken) {
+    if (!authtoken || !chatParticipants || !chatParticipants.user || !chatParticipants.receiver) {
       toast({
         title: "Access Denied",
-        description: "You need to log in to access chats."
+        description: "You need to select contact to access chats."
       });
-      navigate("/auth");
+      navigate("/contacts");
     } else {
       setIsAuthenticated(authtoken);
     }
@@ -110,6 +112,7 @@ const ChatInterface = () => {
           }
         });
 
+        console.log("response.data")
         console.log(response.data)
 
         const { userData, receiverData } = response.data;
@@ -119,9 +122,17 @@ const ChatInterface = () => {
         const receiverchat = receiverData?.chat || [];
 
         // Merge and set messages
-        const mergedMessages = mergeChats(userchat, receiverchat);
-        setMessages(mergedMessages);
-        console.log(mergedMessages)
+        let mergedChat = [...(userchat.map(chat => ({ ...chat, isOwn: true }))), ...(receiverchat.map(chat => ({ ...chat, isOwn: false })))].sort((a, b) => a.timeMsg - b.timeMsg)
+
+        mergedChat = mergedChat.map(msg => ({
+          id: msg._id || uuidv4(),
+          content: msg.text,
+          timestamp: new Date(msg.timeMsg) || new Date(),
+          isOwn: msg.isOwn,
+          status: 'read'
+        }))
+
+        setMessages(mergedChat);
       } catch (error) {
         console.error("Error fetching messages:", error);
         toast({
@@ -165,7 +176,7 @@ const ChatInterface = () => {
     try {
       // Here you would send the message to your backend
       const response = await axios.post(`${BACKEND_URL}/api/user/messages`,
-        { ...chatParticipants, message:   newMessage },
+        { ...chatParticipants, message: newMessage },
         {
           headers: {
             "Content-Type": "application/json",
@@ -238,15 +249,23 @@ const ChatInterface = () => {
     return false;
   }
 
+  function getInitials(name) {
+    return name
+      .split(" ") // Split the name into words
+      .map(word => word[0]) // Get the first letter of each word
+      .join("") // Join them together
+      .toUpperCase(); // Ensure uppercase
+  }
+
   return (
     <div className="flex flex-col h-full bg-background rounded-2xl shadow-lg border border-border overflow-hidden">
       <div className="flex items-center justify-between p-4 border-b border-border bg-card">
         <div className="flex items-center">
           <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center mr-3">
-            <span className="text-primary font-medium">AI</span>
+            <span className="text-primary font-medium">{getInitials(chatParticipants.receiver.name)}</span>
           </div>
           <div>
-            <h3 className="font-medium text-card-foreground">Assistant</h3>
+            <h3 className="font-medium text-card-foreground">{chatParticipants.receiver.name}</h3>
             <p className="text-xs text-muted-foreground">Online</p>
           </div>
         </div>
@@ -262,6 +281,7 @@ const ChatInterface = () => {
             <AnimatePresence initial={false}>
               {messages.map((message) => (
                 <div key={message.id}>
+                  {/* {console.log("message")} */}
                   {/* {console.log(message)} */}
                   {/* <DateSeparator date={message.timestamp} /> */}
                   {checkDate(message.timestamp) && <DateSeparator date={message.timestamp} />}

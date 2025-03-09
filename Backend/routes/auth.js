@@ -15,6 +15,7 @@ router.post('/signup',
         body('name', "Name should have atleast 2 letters").isLength({ min: 2 }),
         body('username', "Username should have atleast 5 characters").isLength({ min: 5 }),
         body('password', "Password should have atleast 5 characters").isLength({ min: 5 }),
+        body('phnum', "Phone number should be 10 digits").isLength({ min: 10 }),
     ],
     async function (req, res) {
         const errors = validationResult(req);
@@ -24,7 +25,7 @@ router.post('/signup',
 
         
         try {
-            const {name, username, password } = req.body;
+            const {name, username, password, email, phnum } = req.body;
 
             let user = await List.findOne({ username: `${username}` });
             if (user) {
@@ -41,6 +42,8 @@ router.post('/signup',
             user = await List.create({
                 name: name,
                 username: username,
+                email: email,
+                phnum: phnum,
                 password: hashedPassword,
             });
 

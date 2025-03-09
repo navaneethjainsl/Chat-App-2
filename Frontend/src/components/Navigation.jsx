@@ -13,7 +13,7 @@ import Cookies from "js-cookie";
 const navItems = [
   { path: '/', label: 'Home', icon: Home },
   { path: '/auth', label: 'Sign In', icon: User },
-  { path: '/chat', label: 'Chat', icon: MessageSquare },
+  { path: '/contacts', label: 'Contacts', icon: MessageSquare },
 ];
 
 const Navigation = () => {

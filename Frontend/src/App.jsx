@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Logout from "./pages/Logout";
 import Chat from "./pages/Chat";
+import Contacts from "./pages/Contacts.jsx";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const AnimatedRoutes = () => {
         <Route path="/auth" element={<Auth />} />
         <Route path="/logout" element={<Logout />} />
         <Route path="/chat" element={<Chat />} />
+        <Route path="/contacts" element={<Contacts />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </AnimatePresence>

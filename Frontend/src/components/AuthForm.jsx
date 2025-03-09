@@ -34,7 +34,8 @@ const loginSchema = z.object({
 
 const registerSchema = z.object({
 	name: z.string().min(2, 'Name must be at least 2 characters'),
-	// email: z.string().email('Invalid email address'),
+	email: z.string().email('Invalid email address'),
+	phnum: z.string().regex(/^\d{10}$/, 'Phone number must be exactly 10 digits'),
 	username: z.string().min(5, 'Username must have at least 5 characters'),
 	password: z.string().min(5, 'Password must be at least 5 characters'),
 	confirmPassword: z.string().min(5, 'Password must be at least 5 characters'),
@@ -65,7 +66,8 @@ const AuthForm = () => {
 		resolver: zodResolver(registerSchema),
 		defaultValues: {
 			name: '',
-			// email: '',
+			email: '',
+			phnum: '',
 			username: '',
 			password: '',
 			confirmPassword: '',
@@ -100,7 +102,7 @@ const AuthForm = () => {
 			});
 
 			setTimeout(() => {
-				navigate('/chat');
+				navigate('/contacts');
 			}, 1500);
 		}
 		catch (error) {
@@ -115,7 +117,7 @@ const AuthForm = () => {
 			});
 
 			// setTimeout(() => {
-			//   navigate('/chat');
+			//   navigate('/contacts');
 			// }, 1500);
 		}
 
@@ -372,26 +374,47 @@ const AuthForm = () => {
 											)}
 										/>
 
-										{/* <FormField
-                      control={registerForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                              <Input
-                                placeholder="your@email.com"
-                                className="pl-10"
-                                {...field}
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    /> */}
+										<FormField
+											control={registerForm.control}
+											name="phnum"
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>Phone Number</FormLabel>
+													<FormControl>
+														<div className="relative">
+															<Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+															<Input
+																placeholder="9999999999"
+																className="pl-10"
+																{...field}
+															/>
+														</div>
+													</FormControl>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
+
+										<FormField
+											control={registerForm.control}
+											name="email"
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>Email</FormLabel>
+													<FormControl>
+														<div className="relative">
+															<Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
+															<Input
+																placeholder="your@email.com"
+																className="pl-10"
+																{...field}
+															/>
+														</div>
+													</FormControl>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
 
 										<FormField
 											control={registerForm.control}
